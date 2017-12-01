@@ -26,10 +26,9 @@ def close_db(error):
 @app.route('/')
 def hello_world():
     db = get_db()
-    query = db.execute('select phone_number,reminder_text,reminder_time from reminders')
-    reminders = query.fetchall()
-    print reminders
-    return str([str(r) for r in reminders])
+    cursor = db.execute('select phone_number,reminder_text,reminder_time from reminders')
+    reminders = cursor.fetchall()
+    return str([tuple(r) for r in reminders])
 
 @app.route('/add', methods=['POST'])
 def add():
