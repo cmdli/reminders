@@ -2,11 +2,30 @@ import os
 import sqlite3
 from flask import Flask, g, request, redirect, url_for
 
+######## App Setup
+
+def install_secret_config(app):
+    filepath = os.path.join(app.root_path,'secret.cfg')
+    print "Secret Config:"
+    try:
+        lines = open(filepath, 'r').readlines()
+        for line in lines:
+            key,value = line.split("=")[:2]
+            app.config[key] = value
+            print "Adding " + key + ":" + value
+    except ValueError:
+        print "Secret config has syntax error"
+    except IOError:
+        print "Could not load secret config!"
+
 app = Flask(__name__)
+install_secret_config(app)
 app.config.update(dict(
     DATABASE=os.path.join(app.root_path,'reminders.db'),
     DEBUG=True
 ))
+
+####### Database
 
 def connect_db():
     db = sqlite3.connect(app.config['DATABASE'])
@@ -23,6 +42,8 @@ def close_db(error):
     if hasattr(g, 'sqlite_db'):
         g.sqlite_db.close()
 
+######## Requests
+        
 @app.route('/')
 def hello_world():
     db = get_db()
@@ -38,6 +59,8 @@ def add():
                [request.form['number'],request.form['text'],request.form['time']])
     db.commit()
     return redirect(url_for('hello_world'))
+
+
 
 if __name__ == "__main__":
     app.run()
