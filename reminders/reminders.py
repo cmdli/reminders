@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from flask import Flask, g, request, redirect, url_for
+from twilio.rest import Client as TwilioClient
 
 ######## App Setup
 
@@ -10,6 +11,7 @@ def install_secret_config(app):
     try:
         lines = open(filepath, 'r').readlines()
         for line in lines:
+            line = line.strip()
             key,value = line.split("=")[:2]
             app.config[key] = value
             print "Adding " + key + ":" + value
@@ -60,7 +62,16 @@ def add():
     db.commit()
     return redirect(url_for('hello_world'))
 
-
+@app.route('/send', methods=['POST'])
+def send():
+    number = request.form['number']
+    client = TwilioClient(app.config['TWILIO_SID'],app.config['TWILIO_AUTH_TOKEN'])
+    client.api.account.messages.create(
+        to=request.form['number'],
+        from_=request.form['from'],
+        body=request.form['body']
+        )
+    return "Done."
 
 if __name__ == "__main__":
     app.run()
