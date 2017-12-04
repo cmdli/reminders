@@ -2,6 +2,7 @@ import os
 import sqlite3
 from flask import Flask, g, request, redirect, url_for
 from twilio.rest import Client as TwilioClient
+from twilio.twiml.messaging_response import MessagingResponse, Message
 
 ######## App Setup
 
@@ -47,7 +48,7 @@ def close_db(error):
 ######## Requests
         
 @app.route('/')
-def hello_world():
+def get_reminders():
     db = get_db()
     cursor = db.execute('select phone_number,reminder_text,reminder_time from reminders')
     reminders = cursor.fetchall()
@@ -62,15 +63,25 @@ def add():
     db.commit()
     return redirect(url_for('hello_world'))
 
-@app.route('/send', methods=['POST'])
-def send():
-    number = request.form['number']
+@app.route('/receive', methods=['POST'])
+def receive():
+    resp = MessagingResponse()
+    msg = Message()\
+          .body('Hello Phone!')
+    resp.append(msg)
+    return str(resp)
+
+def send_message(to,body):
     client = TwilioClient(app.config['TWILIO_SID'],app.config['TWILIO_AUTH_TOKEN'])
     client.api.account.messages.create(
-        to=request.form['number'],
-        from_=request.form['from'],
-        body=request.form['body']
-        )
+        to=to,
+        from_=app.config['TWILIO_NUMBER'],
+        body=body
+    )    
+
+@app.route('/send', methods=['POST'])
+def send():
+    send_message(request.form['number'], request.form['body'])
     return "Done."
 
 if __name__ == "__main__":
