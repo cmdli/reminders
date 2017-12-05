@@ -61,7 +61,7 @@ def add():
                'values (?,?,?)',
                [request.form['number'],request.form['text'],request.form['time']])
     db.commit()
-    return redirect(url_for('hello_world'))
+    return redirect(url_for('get_reminders'))
 
 @app.route('/receive', methods=['POST'])
 def receive():
