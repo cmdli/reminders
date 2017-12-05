@@ -66,9 +66,7 @@ def add():
 @app.route('/receive', methods=['POST'])
 def receive():
     resp = MessagingResponse()
-    msg = Message()\
-          .body('Hello Phone!')
-    resp.append(msg)
+    resp.message('Hello phone!')
     return str(resp)
 
 def send_message(to,body):
