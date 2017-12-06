@@ -50,24 +50,42 @@ def close_db(error):
 @app.route('/')
 def get_reminders():
     db = get_db()
-    cursor = db.execute('select phone_number,reminder_text,reminder_time from reminders')
+    cursor = db.execute('select * from reminders')
     reminders = cursor.fetchall()
     return str([tuple(r) for r in reminders])
 
 @app.route('/add', methods=['POST'])
 def add():
-    db = get_db()
-    db.execute('insert into reminders (phone_number,reminder_text,reminder_time)' +
-               'values (?,?,?)',
-               [request.form['number'],request.form['text'],request.form['time']])
-    db.commit()
+    add_message(request.form['number'],
+                request.form['text'],
+                request.form['time'])
     return redirect(url_for('get_reminders'))
+
+def usage():
+    resp = MessagingResponse()
+    resp.message("Sorry, didn't catch that. Usage: <text> <time from now>")
+    return str(resp)
 
 @app.route('/receive', methods=['POST'])
 def receive():
-    resp = MessagingResponse()
-    resp.message('Hello phone!')
-    return str(resp)
+    try:
+        body = request.values['Body']
+        number = request.values['From']
+        values = body.split(' ')
+        text,time = values[0],int(values[1])
+        add_reminder(number,values[0],int(values[1]))
+        resp = MessagingResponse()
+        resp.message("Added reminder for '" + text +
+                     "' in " + str(time) + " seconds")
+        return str(resp)
+    except (ValueError,KeyError):
+        return usage()
+
+def add_reminder(number,body,time):
+    db = get_db()
+    db.execute('insert into reminders (phone_number,reminder_text,reminder_time)'
+               + ' values (?,?,?)', [number,body,time])
+    db.commit()
 
 def send_message(to,body):
     client = TwilioClient(app.config['TWILIO_SID'],app.config['TWILIO_AUTH_TOKEN'])
