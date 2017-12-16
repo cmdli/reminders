@@ -18,7 +18,7 @@ def install_secret_config(app):
     except ValueError:
         print "Secret config has syntax error"
     except IOError:
-        print "Could not load secret config!"
+        print "Could not load secret config at secret.cfg!"
 
 app = Flask(__name__)
 install_secret_config(app)
@@ -88,14 +88,6 @@ def add_reminder(number,body,time):
                + ' values (?,?,?)', [number,body,time])
     db.commit()
 
-def send_message(to,body):
-    client = TwilioClient(app.config['TWILIO_SID'],app.config['TWILIO_AUTH_TOKEN'])
-    client.api.account.messages.create(
-        to=to,
-        from_=app.config['TWILIO_NUMBER'],
-        body=body
-    )
-
 @app.route('/send_reminders', methods=['GET'])
 def send_reminders():
     db = get_db()
@@ -121,6 +113,14 @@ def send_reminders():
 def send():
     send_message(request.form['number'], request.form['body'])
     return "Done."
+
+def send_message(to,body):
+    client = TwilioClient(app.config['TWILIO_SID'],app.config['TWILIO_AUTH_TOKEN'])
+    client.api.account.messages.create(
+        to=to,
+        from_=app.config['TWILIO_NUMBER'],
+        body=body
+    )
 
 if __name__ == "__main__":
     app.run()
