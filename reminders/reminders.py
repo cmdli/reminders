@@ -79,7 +79,7 @@ def receive():
         resp.message("Added reminder for '" + text +
                      "' in " + str(expiration) + " seconds")
         return str(resp)
-    except (ValueError,KeyError):
+    except (ValueError,KeyError,IndexError):
         return usage()
 
 def add_reminder(number,body,time):
